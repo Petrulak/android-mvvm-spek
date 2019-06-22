@@ -3,15 +3,15 @@ package com.petrulak.mvvm.feature.price.data
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
+import com.petrulak.mvvm.common.hasCompletedWithError
+import com.petrulak.mvvm.common.hasCompletedWithoutErrors
+import com.petrulak.mvvm.common.hasOneValue
 import com.petrulak.mvvm.feature.price.data.model.Prices
 import com.petrulak.mvvm.feature.price.data.model.PricesMapper
 import com.petrulak.mvvm.feature.price.data.model.PricesWrapperDto
 import com.petrulak.mvvm.feature.price.data.model.newMock
 import com.petrulak.mvvm.feature.price.data.source.BitCoinPriceLocalSourceType
 import com.petrulak.mvvm.feature.price.data.source.BitCoinPriceRemoteSourceType
-import com.petrulak.mvvm.common.hasCompletedWithError
-import com.petrulak.mvvm.common.hasCompletedWithoutErrors
-import com.petrulak.mvvm.common.hasOneValue
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -69,7 +69,7 @@ object BitCoinPriceRepositoryTest : Spek({
 
     describe("refresh") {
 
-        context("new values are fetched from API") {
+        context("new values are fetched from API and updating local source is successful ") {
 
             beforeEach {
                 repository.refresh().subscribe(refreshObserver)
@@ -79,8 +79,26 @@ object BitCoinPriceRepositoryTest : Spek({
                 verify(localSource).updatePrices(mappedValuesFromApi)
             }
 
-            it("completable should complete") {
+            it("should complete") {
                 refreshObserver.hasCompletedWithoutErrors()
+            }
+        }
+
+        context("new values are fetched from API and updating local source is NOT successful ") {
+
+            val localSourceError = Throwable("WTF ???")
+
+            beforeEach {
+                `when`(localSource.updatePrices(any())).thenReturn(Completable.error(localSourceError))
+                repository.refresh().subscribe(refreshObserver)
+            }
+
+            it("should store new values") {
+                verify(localSource).updatePrices(mappedValuesFromApi)
+            }
+
+            it("should throw an error") {
+                refreshObserver.hasCompletedWithError(localSourceError)
             }
         }
 
@@ -97,7 +115,7 @@ object BitCoinPriceRepositoryTest : Spek({
                 verify(localSource, never()).updatePrices(pricesMock)
             }
 
-            it("completable should complete") {
+            it("should throw an error") {
                 refreshObserver.hasCompletedWithError(apiError)
             }
         }

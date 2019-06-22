@@ -43,7 +43,7 @@ object BitCoinPriceUseCaseTest : Spek({
             useCase.refresh().subscribe(refreshObserver)
         }
 
-        it("should delegate to respoitory") {
+        it("should delegate to respository") {
             verify(repository).refresh()
         }
     }
@@ -80,7 +80,5 @@ object BitCoinPriceUseCaseTest : Spek({
                 verify(repository).refresh()
             }
         }
-
     }
-
 })

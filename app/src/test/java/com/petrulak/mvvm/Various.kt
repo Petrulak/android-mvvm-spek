@@ -1,7 +1,9 @@
 package com.petrulak.mvvm
 
 import com.petrulak.mvvm.MyEnum.*
+import com.petrulak.mvvm.feature.price.data.BitCoinPriceRepositoryType
 import com.petrulak.mvvm.feature.price.data.source.BitCoinPriceLocalSource
+import org.mockito.Mockito.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.dsl.Skip
 import org.spekframework.spek2.lifecycle.CachingMode
@@ -92,15 +94,18 @@ object FlowTest : Spek({
 
 object HelloWorldTest : Spek({
 
-    val unusedProperty = Any()
+    group("main group") {
 
-    group("string length") {
+        group("sub group 1") {
 
-        val string = "abcde"
+            val string = "abcde"
 
-        test("size should be 5") {
-            assertEquals(string.length, 5)
+            test("size should be 5") {
+                assertEquals(string.length, 5)
+            }
         }
+
+
     }
 })
 
@@ -112,6 +117,7 @@ fun thaBrain(input: Int) = when (input) {
     3    -> THIRD
     else -> OTHER
 }
+
 
 object ParametrizedTest : Spek({
 
@@ -130,64 +136,142 @@ object ParametrizedTest : Spek({
     }
 })
 
+object HelloWorld : Spek({
+
+    val mock by memoized { mock(BitCoinPriceRepositoryType::class.java) }
+
+    group("A") {
+
+        group("B") {
+
+            test("test 1") {
+                println("mock : $mock")
+            }
+
+            test("test 2") {
+                println("mock : $mock")
+            }
+        }
+
+        test("test 3") {
+            println("mock : $mock")
+        }
+    }
+})
+
 
 object TestTest : Spek({
 
     val abc by memoized(CachingMode.GROUP) { BitCoinPriceLocalSource() }
 
     beforeEachTest {
-        print("beforeEachTest")
+        println("beforeEachTest")
     }
 
     afterEachTest {
-        print("afterEachTest")
+        println("afterEachTest")
     }
 
     beforeGroup {
-        print("beforeGroup")
+        println("beforeGroup")
     }
 
     afterGroup {
-        print("afterGroup")
+        println("afterGroup")
     }
 
     describe("test suite 1") {
 
-        print("TS 1")
+        println("TS 1")
 
         context("test suite 1 : scenario 1") {
 
-            print("TS 1 : scenario 1")
+            println("TS 1 : scenario 1")
 
             it("test suite 1 : scenario 1 : assertions 1") {
-                print("TS 1: scenario 1 : assertions 1" + abc)
+                println("TS 1: scenario 1 : assertions 1" + abc)
             }
 
             it("test suite 1 : scenario 1 : assertions 2") {
 
-                print("TS 1: scenario 1 : assertions 2" + abc)
+                println("TS 1: scenario 1 : assertions 2" + abc)
             }
         }
     }
 
     describe("test suite 2") {
 
-        print("TS 2")
+        println("TS 2")
 
         describe("test suite 2 : scenario 1") {
 
-            print("TS 2 : scenario 1")
+            println("TS 2 : scenario 1")
 
             it("test suite 2 : scenario 1 : assertions 1") {
 
-                print("TS 2: scenario 1 : assertions 1" + abc)
+                println("TS 2: scenario 1 : assertions 1" + abc)
             }
 
             it("test suite 2 : scenario 1 : assertions 2") {
 
-                print("TS 2: scenario 1 : assertions 2" + abc)
+                println("TS 2: scenario 1 : assertions 2" + abc)
             }
         }
     }
 
+})
+
+object Abc : Spek({
+
+
+    beforeGroup {
+        println("beforeGroup")
+    }
+
+    describe("registration") {
+
+        println("describe : registration")
+
+
+        context("user name is valid") {
+
+            println("context : user name is valid")
+
+            beforeEachTest {
+                println("beforeEachTest")
+            }
+
+            it("should navigate to next screen") {
+                println("should navigate to next screen")
+            }
+
+            it("should show a dialog") {
+                println("hould show a dialog")
+            }
+
+            afterEachTest {
+                println("afterEachTest")
+            }
+        }
+
+        context("user name is NOT valid") {
+
+            println("context : user name is  NOTvalid")
+
+
+            it("should navigate to next screen") {
+                println("should navigate to next screen")
+            }
+
+            it("should show a dialog") {
+                println("hould show a dialog")
+            }
+
+        }
+
+    }
+
+    afterGroup {
+        println("afterGroup")
+    }
 })

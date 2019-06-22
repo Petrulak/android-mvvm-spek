@@ -1,20 +1,21 @@
 package com.petrulak.mvvm.feature.price.data.source
 
-import com.petrulak.mvvm.feature.price.data.model.Prices
-import com.petrulak.mvvm.feature.price.data.model.newMock
-import com.petrulak.mvvm.feature.price.data.model.newNullMock
 import com.petrulak.mvvm.common.hasCompletedWithoutErrors
 import com.petrulak.mvvm.common.hasOneValue
 import com.petrulak.mvvm.common.haveNoValues
+import com.petrulak.mvvm.feature.price.data.model.Prices
+import com.petrulak.mvvm.feature.price.data.model.newMock
+import com.petrulak.mvvm.feature.price.data.model.newNullMock
 import io.reactivex.observers.TestObserver
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object BitCoinPriceLocalSourceTest : Spek({
 
+    val pricesMock = Prices.newMock()
+    val pricesNullMock = Prices.newNullMock()
+
     val localSource by memoized { BitCoinPriceLocalSource() }
-    val pricesMock by memoized { Prices.newMock() }
-    val pricesNullMock by memoized { Prices.newNullMock() }
 
     val pricesObserver by memoized { TestObserver.create<Prices>() }
     val refreshObserver by memoized { TestObserver.create<Void>() }
@@ -24,6 +25,10 @@ object BitCoinPriceLocalSourceTest : Spek({
     }
 
     describe("updatePrices") {
+
+        beforeEachTest {
+            localSource.pricesStream().subscribe(pricesObserver)
+        }
 
         context("some of the currencies are null") {
 
@@ -35,7 +40,7 @@ object BitCoinPriceLocalSourceTest : Spek({
                 pricesObserver.haveNoValues()
             }
 
-            it("completable should complete") {
+            it("refreshing should complete") {
                 refreshObserver.hasCompletedWithoutErrors()
             }
         }
@@ -50,7 +55,7 @@ object BitCoinPriceLocalSourceTest : Spek({
                 pricesObserver.hasOneValue(pricesMock)
             }
 
-            it("completable should complete") {
+            it("refreshing should complete") {
                 refreshObserver.hasCompletedWithoutErrors()
             }
         }
@@ -58,19 +63,18 @@ object BitCoinPriceLocalSourceTest : Spek({
 
     describe("pricesStream") {
 
-        context("pricesStream have been set") {
+        context("prices have been set") {
 
             beforeEachTest {
                 localSource.cache.onNext(pricesMock)
             }
 
-            it("should not emit any values") {
+            it("should emit last values") {
                 pricesObserver.hasOneValue(pricesMock)
             }
-
         }
 
-        context("pricesStream have not been set") {
+        context("prices have not been set") {
 
             it("should not emit any values") {
                 pricesObserver.haveNoValues()
