@@ -18,42 +18,40 @@ import io.reactivex.observers.TestObserver
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.spekframework.spek2.Spek
+import org.spekframework.spek2.lifecycle.CachingMode
 import org.spekframework.spek2.style.gherkin.Feature
 
 object BitCoinPriceRepositoryGherkin : Spek({
 
+    val pricesWrapperDtoMock = PricesWrapperDto.newMock()
+    val pricesMock = Prices.newMock()
+
+    val pricesMapper = PricesMapper()
+    val mappedValuesFromApi = pricesMapper.map(pricesWrapperDtoMock)
+
+    val remoteSource by memoized(CachingMode.EACH_GROUP) {
+        mock(BitCoinPriceRemoteSourceType::class.java).apply {
+            `when`(getPrices()).thenReturn(Single.just(pricesWrapperDtoMock))
+        }
+    }
+    val localSource by memoized(CachingMode.EACH_GROUP) {
+        mock(BitCoinPriceLocalSourceType::class.java).apply {
+
+            `when`(updatePrices(any())).thenReturn(Completable.complete())
+
+            `when`(pricesStream()).thenReturn(Observable.just(pricesMock))
+        }
+    }
+    val repository by memoized(CachingMode.EACH_GROUP) {
+        BitCoinPriceRepository(
+            remoteSource = remoteSource,
+            localSource = localSource,
+            pricesMapper = pricesMapper
+        )
+    }
+    val refreshObserver by memoized(CachingMode.EACH_GROUP) { TestObserver.create<Void>() }
+
     Feature("refresh") {
-
-        val pricesWrapperDtoMock = PricesWrapperDto.newMock()
-        val pricesMock = Prices.newMock()
-
-        val pricesMapper = PricesMapper()
-        val mappedValuesFromApi = pricesMapper.map(pricesWrapperDtoMock)
-
-        val remoteSource by memoized {
-            mock(BitCoinPriceRemoteSourceType::class.java).apply {
-                `when`(getPrices()).thenReturn(Single.just(pricesWrapperDtoMock))
-            }
-        }
-
-        val localSource by memoized {
-            mock(BitCoinPriceLocalSourceType::class.java).apply {
-
-                `when`(updatePrices(any())).thenReturn(Completable.complete())
-
-                `when`(pricesStream()).thenReturn(Observable.just(pricesMock))
-            }
-        }
-
-        val repository by memoized {
-            BitCoinPriceRepository(
-                remoteSource = remoteSource,
-                localSource = localSource,
-                pricesMapper = pricesMapper
-            )
-        }
-
-        val refreshObserver by memoized { TestObserver.create<Void>() }
 
         Scenario("new values are fetched from API") {
 
@@ -62,7 +60,7 @@ object BitCoinPriceRepositoryGherkin : Spek({
             }
 
             Then("should store new values") {
-                verify(localSource).updatePrices(mappedValuesFromApi)
+                verify(localSource, never()).updatePrices(mappedValuesFromApi)
             }
 
             And("completable should complete") {
@@ -90,5 +88,6 @@ object BitCoinPriceRepositoryGherkin : Spek({
                 refreshObserver.hasCompletedWithError(apiError)
             }
         }
+
     }
 })
