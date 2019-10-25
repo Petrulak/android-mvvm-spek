@@ -1,6 +1,6 @@
 package com.petrulak.mvvm
 
-import com.petrulak.mvvm.MyEnum.*
+import com.petrulak.mvvm.TRANSFORMER.*
 import com.petrulak.mvvm.feature.price.data.BitCoinPriceRepositoryType
 import com.petrulak.mvvm.feature.price.data.source.BitCoinPriceLocalSource
 import org.mockito.Mockito.mock
@@ -109,15 +109,6 @@ object HelloWorldTest : Spek({
     }
 })
 
-enum class MyEnum { FIRST, SECOND, THIRD, OTHER }
-
-fun thaBrain(input: Int) = when (input) {
-    1    -> FIRST
-    2    -> SECOND
-    3    -> THIRD
-    else -> OTHER
-}
-
 
 object ParametrizedTest : Spek({
 
@@ -130,7 +121,7 @@ object ParametrizedTest : Spek({
             -1 to OTHER
         ).forEach {
             it("${it.first} : should map to proper value") {
-                assertEquals(thaBrain(it.first), it.second)
+               // assertEquals(thaBrain(it.first), it.second)
             }
         }
     }
@@ -273,5 +264,72 @@ object Abc : Spek({
 
     afterGroup {
         println("afterGroup")
+    }
+
+
+})
+
+object RegistrationTest : Spek({
+
+    val skip = if (BuildConfig.DEBUG) Skip.Yes() else Skip.No
+
+    describe("registration") {
+
+        it("should initialize with default values") { println("test1") }
+
+        context("success") {
+            it("should proceed to next screen") { println("test2") }
+            it("should track analytics event", skip = skip) { println("test3") }
+        }
+
+        xcontext("failure") {
+            it("should display an error") { println("test4") }
+        }
+    }
+})
+
+
+object PropertyInitializationTest : Spek({
+
+    val mock by memoized(CachingMode.SCOPE) { mock(BitCoinPriceRepositoryType::class.java) }
+
+    group("A") {
+
+        group("B") {
+            test("test 1") { println("mock : $mock") }
+            test("test 2") { println("mock : $mock") }
+        }
+
+        test("test 3") { println("mock : $mock") }
+    }
+})
+
+
+enum class TRANSFORMER { FIRST, SECOND, THIRD, OTHER }
+
+fun transform(input: Int): TRANSFORMER {
+    return when (input) {
+        1 -> FIRST
+        2 -> SECOND
+        3 -> THIRD
+        else -> OTHER
+    }
+}
+
+object TransformTest : Spek({
+
+    group("transform") {
+
+        listOf(
+            1 to FIRST,
+            2 to SECOND,
+            3 to THIRD,
+            4 to THIRD,
+            -1 to OTHER
+        ).forEach {
+            test("${it.first} : should transform to proper value") {
+                assertEquals(transform(it.first), it.second)
+            }
+        }
     }
 })
